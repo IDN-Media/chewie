@@ -10,6 +10,8 @@ class CenterPlayButton extends StatelessWidget {
     required this.isPlaying,
     required this.isFinished,
     this.onPressed,
+    required this.isFullscreen,
+    this.onExpandCollapse,
   }) : super(key: key);
 
   final Color backgroundColor;
@@ -18,36 +20,63 @@ class CenterPlayButton extends StatelessWidget {
   final bool isPlaying;
   final bool isFinished;
   final VoidCallback? onPressed;
+  final bool isFullscreen;
+  final VoidCallback? onExpandCollapse;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
       child: Center(
-        child: AnimatedOpacity(
-          opacity: show ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          child: Container(
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              shape: BoxShape.circle,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              // Always set the iconSize on the IconButton, not on the Icon itself:
-              // https://github.com/flutter/flutter/issues/52980
-              child: IconButton(
-                iconSize: 32,
-                icon: isFinished
-                    ? Icon(Icons.replay, color: iconColor)
-                    : AnimatedPlayPause(
-                        color: iconColor,
-                        playing: isPlaying,
-                      ),
-                onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedOpacity(
+              opacity: show ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                // Always set the iconSize on the IconButton, not on the Icon itself:
+                // https://github.com/flutter/flutter/issues/52980
+                child: IconButton(
+                  iconSize: 90,
+                  icon: isFinished
+                      ? Icon(Icons.replay, color: iconColor)
+                      : AnimatedPlayPause(
+                          color: iconColor,
+                          playing: isPlaying,
+                        ),
+                  onPressed: onPressed,
+                ),
               ),
             ),
-          ),
+            GestureDetector(
+              child: Container(
+                color: Colors.transparent,
+                child: Center(
+                  child: AnimatedOpacity(
+                    opacity: show ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      // Always set the iconSize on the IconButton, not on the Icon itself:
+                      // https://github.com/flutter/flutter/issues/52980
+                      child: IconButton(
+                        iconSize: 90,
+                        icon: Icon(
+                          isFullscreen
+                              ? Icons.fullscreen_exit
+                              : Icons.fullscreen,
+                          color: iconColor,
+                        ),
+                        onPressed: onExpandCollapse,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
