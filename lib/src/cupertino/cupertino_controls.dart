@@ -311,6 +311,8 @@ class _CupertinoControlsState extends State<CupertinoControls>
         isPlaying: controller.value.isPlaying,
         show: showPlayButton,
         onPressed: _playPause,
+        isFullscreen: chewieController.isFullScreen,
+        onExpandCollapse: _onExpandCollapse,
       ),
     );
   }
