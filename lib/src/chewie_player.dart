@@ -40,7 +40,7 @@ class Chewie extends StatefulWidget {
 }
 
 class ChewieState extends State<Chewie> {
-  bool _isFullScreen = false; 
+  bool _isFullScreen = false;
 
   bool get isControllerFullScreen => widget.controller.isFullScreen;
   late PlayerNotifier notifier;
@@ -72,8 +72,10 @@ class ChewieState extends State<Chewie> {
   Future<void> listener() async {
     if (isControllerFullScreen && !_isFullScreen) {
       _isFullScreen = isControllerFullScreen;
+      widget.controller.onToggleFullscreen(true);
       await _pushFullScreenWidget(context);
     } else if (_isFullScreen) {
+      widget.controller.onToggleFullscreen(false);
       Navigator.of(
         context,
         rootNavigator: widget.controller.useRootNavigator,
@@ -184,7 +186,8 @@ class ChewieState extends State<Chewie> {
 
   void onEnterFullScreen() {
     final videoWidth = widget.controller.videoPlayerController.value.size.width;
-    final videoHeight = widget.controller.videoPlayerController.value.size.height;
+    final videoHeight =
+        widget.controller.videoPlayerController.value.size.height;
 
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
 
@@ -201,7 +204,8 @@ class ChewieState extends State<Chewie> {
 
     if (widget.controller.deviceOrientationsOnEnterFullScreen != null) {
       /// Optional user preferred settings
-      SystemChrome.setPreferredOrientations(widget.controller.deviceOrientationsOnEnterFullScreen!);
+      SystemChrome.setPreferredOrientations(
+          widget.controller.deviceOrientationsOnEnterFullScreen!);
     } else {
       final isLandscapeVideo = videoWidth > videoHeight;
       final isPortraitVideo = videoWidth < videoHeight;
@@ -228,6 +232,8 @@ class ChewieState extends State<Chewie> {
         SystemChrome.setPreferredOrientations(DeviceOrientation.values);
       }
     }
+
+    widget.controller.onToggleFullscreen(true);
   }
 }
 
@@ -242,6 +248,17 @@ class ChewieState extends State<Chewie> {
 /// player, please use the standard information provided by the
 /// `VideoPlayerController`.
 class ChewieController extends ChangeNotifier {
+  final List<dynamic> cookingStep;
+  final List<dynamic> modelLabelRecipe;
+  final bool isOfficial;
+  String stepCook;
+  int activeCook;
+  final String slugRecipe;
+  final String idRecipe;
+  final Function(bool) onToggleFullscreen;
+  final String baseCDNUrl;
+  final Function(dynamic) onCookingStepChange;
+
   ChewieController({
     required this.videoPlayerController,
     this.optionsTranslation,
@@ -276,12 +293,27 @@ class ChewieController extends ChangeNotifier {
     this.systemOverlaysAfterFullScreen = SystemUiOverlay.values,
     this.deviceOrientationsAfterFullScreen = DeviceOrientation.values,
     this.routePageBuilder,
+    // Customized for Yummy
+    this.cookingStep = const <dynamic>[],
+    this.modelLabelRecipe = const <dynamic>[],
+    this.stepCook = "",
+    this.activeCook = 0,
+    this.isOfficial = false,
+    this.slugRecipe = "",
+    this.idRecipe = "",
+    this.onToggleFullscreen = _onToggleFullscreen,
+    this.baseCDNUrl = '',
+    this.onCookingStepChange = _onCookingStepChange,
   }) : assert(
           playbackSpeeds.every((speed) => speed > 0),
           'The playbackSpeeds values must all be greater than 0',
         ) {
     _initialize();
   }
+
+  // Default function
+  static void _onToggleFullscreen(bool _) {}
+  static void _onCookingStepChange(dynamic _) {}
 
   ChewieController copyWith({
     VideoPlayerController? videoPlayerController,
@@ -316,17 +348,28 @@ class ChewieController extends ChangeNotifier {
     List<DeviceOrientation>? deviceOrientationsOnEnterFullScreen,
     List<SystemUiOverlay>? systemOverlaysAfterFullScreen,
     List<DeviceOrientation>? deviceOrientationsAfterFullScreen,
-
-  Widget Function(
+    Widget Function(
       BuildContext,
       Animation<double>,
       Animation<double>,
       _ChewieControllerProvider,
     )?
         routePageBuilder,
+    // Customized for Yummy
+    List<dynamic>? cookingStep,
+    List<dynamic>? modelLabelRecipe,
+    bool? isOfficial,
+    String? stepCook,
+    int? activeCook,
+    String? slugRecipe,
+    String? idRecipe,
+    Function(bool)? onToggleFullscreen,
+    String? baseCDNUrl,
+    Function(dynamic)? onCookingStepChange,
   }) {
     return ChewieController(
-      videoPlayerController: videoPlayerController ?? this.videoPlayerController,
+      videoPlayerController:
+          videoPlayerController ?? this.videoPlayerController,
       optionsTranslation: optionsTranslation ?? this.optionsTranslation,
       aspectRatio: aspectRatio ?? this.aspectRatio,
       autoInitialize: autoInitialize ?? this.autoInitialize,
@@ -334,11 +377,14 @@ class ChewieController extends ChangeNotifier {
       startAt: startAt ?? this.startAt,
       looping: looping ?? this.looping,
       fullScreenByDefault: fullScreenByDefault ?? this.fullScreenByDefault,
-      cupertinoProgressColors: cupertinoProgressColors ?? this.cupertinoProgressColors,
-      materialProgressColors: materialProgressColors ?? this.materialProgressColors,
+      cupertinoProgressColors:
+          cupertinoProgressColors ?? this.cupertinoProgressColors,
+      materialProgressColors:
+          materialProgressColors ?? this.materialProgressColors,
       placeholder: placeholder ?? this.placeholder,
       overlay: overlay ?? this.overlay,
-      showControlsOnInitialize: showControlsOnInitialize ?? this.showControlsOnInitialize,
+      showControlsOnInitialize:
+          showControlsOnInitialize ?? this.showControlsOnInitialize,
       showOptions: showOptions ?? this.showOptions,
       optionsBuilder: optionsBuilder ?? this.optionsBuilder,
       additionalOptions: additionalOptions ?? this.additionalOptions,
@@ -355,11 +401,27 @@ class ChewieController extends ChangeNotifier {
           allowPlaybackSpeedChanging ?? this.allowPlaybackSpeedChanging,
       useRootNavigator: useRootNavigator ?? this.useRootNavigator,
       playbackSpeeds: playbackSpeeds ?? this.playbackSpeeds,
-      systemOverlaysOnEnterFullScreen: systemOverlaysOnEnterFullScreen ?? this.systemOverlaysOnEnterFullScreen,
-      deviceOrientationsOnEnterFullScreen: deviceOrientationsOnEnterFullScreen ?? this.deviceOrientationsOnEnterFullScreen,
-      systemOverlaysAfterFullScreen: systemOverlaysAfterFullScreen ?? this.systemOverlaysAfterFullScreen,
-      deviceOrientationsAfterFullScreen: deviceOrientationsAfterFullScreen ?? this.deviceOrientationsAfterFullScreen,
+      systemOverlaysOnEnterFullScreen: systemOverlaysOnEnterFullScreen ??
+          this.systemOverlaysOnEnterFullScreen,
+      deviceOrientationsOnEnterFullScreen:
+          deviceOrientationsOnEnterFullScreen ??
+              this.deviceOrientationsOnEnterFullScreen,
+      systemOverlaysAfterFullScreen:
+          systemOverlaysAfterFullScreen ?? this.systemOverlaysAfterFullScreen,
+      deviceOrientationsAfterFullScreen: deviceOrientationsAfterFullScreen ??
+          this.deviceOrientationsAfterFullScreen,
       routePageBuilder: routePageBuilder ?? this.routePageBuilder,
+      // Customized for Yummy
+      cookingStep: cookingStep ?? this.cookingStep,
+      modelLabelRecipe: modelLabelRecipe ?? this.modelLabelRecipe,
+      stepCook: stepCook ?? this.stepCook,
+      activeCook: activeCook ?? this.activeCook,
+      isOfficial: isOfficial ?? this.isOfficial,
+      slugRecipe: slugRecipe ?? this.slugRecipe,
+      idRecipe: idRecipe ?? this.idRecipe,
+      onToggleFullscreen: onToggleFullscreen ?? this.onToggleFullscreen,
+      baseCDNUrl: this.baseCDNUrl,
+      onCookingStepChange: this.onCookingStepChange,
     );
   }
 
@@ -381,13 +443,15 @@ class ChewieController extends ChangeNotifier {
   /// the builder method. Just add your own options to the Widget
   /// you'll build. If you want to hide the chewieOptions, just leave them
   /// out from your Widget.
-  final Future<void> Function(BuildContext context, List<OptionItem> chewieOptions)? optionsBuilder;
+  final Future<void> Function(
+      BuildContext context, List<OptionItem> chewieOptions)? optionsBuilder;
 
   /// Add your own additional options on top of chewie options
   final List<OptionItem> Function(BuildContext context)? additionalOptions;
 
   /// Define here your own Widget on how your n'th subtitle will look like
-  final Widget Function(BuildContext context, dynamic subtitle)? subtitleBuilder;
+  final Widget Function(BuildContext context, dynamic subtitle)?
+      subtitleBuilder;
 
   /// Add a List of Subtitles here in `Subtitles.subtitle`
   Subtitles? subtitle;
@@ -419,7 +483,8 @@ class ChewieController extends ChangeNotifier {
 
   /// When the video playback runs into an error, you can build a custom
   /// error message.
-  final Widget Function(BuildContext context, String errorMessage)? errorBuilder;
+  final Widget Function(BuildContext context, String errorMessage)?
+      errorBuilder;
 
   /// The Aspect Ratio of the Video. Important to get the correct size of the
   /// video!
@@ -482,7 +547,8 @@ class ChewieController extends ChangeNotifier {
   final ChewieRoutePageBuilder? routePageBuilder;
 
   static ChewieController of(BuildContext context) {
-    final chewieControllerProvider = context.dependOnInheritedWidgetOfExactType<_ChewieControllerProvider>()!;
+    final chewieControllerProvider = context
+        .dependOnInheritedWidgetOfExactType<_ChewieControllerProvider>()!;
 
     return chewieControllerProvider.controller;
   }
@@ -496,7 +562,8 @@ class ChewieController extends ChangeNotifier {
   Future _initialize() async {
     await videoPlayerController.setLooping(looping);
 
-    if ((autoInitialize || autoPlay) && !videoPlayerController.value.isInitialized) {
+    if ((autoInitialize || autoPlay) &&
+        !videoPlayerController.value.isInitialized) {
       await videoPlayerController.initialize();
     }
 
@@ -526,16 +593,19 @@ class ChewieController extends ChangeNotifier {
 
   void enterFullScreen() {
     _isFullScreen = true;
+    onToggleFullscreen(true);
     notifyListeners();
   }
 
   void exitFullScreen() {
     _isFullScreen = false;
+    onToggleFullscreen(false);
     notifyListeners();
   }
 
   void toggleFullScreen() {
     _isFullScreen = !_isFullScreen;
+    onToggleFullscreen(_isFullScreen);
     notifyListeners();
   }
 
@@ -579,5 +649,6 @@ class _ChewieControllerProvider extends InheritedWidget {
   final ChewieController controller;
 
   @override
-  bool updateShouldNotify(_ChewieControllerProvider old) => controller != old.controller;
+  bool updateShouldNotify(_ChewieControllerProvider old) =>
+      controller != old.controller;
 }

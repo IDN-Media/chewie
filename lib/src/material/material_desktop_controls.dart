@@ -5,6 +5,7 @@ import 'package:chewie/src/center_play_button.dart';
 import 'package:chewie/src/chewie_player.dart';
 import 'package:chewie/src/chewie_progress_colors.dart';
 import 'package:chewie/src/helpers/utils.dart';
+import 'package:chewie/src/label_section.dart';
 import 'package:chewie/src/material/material_progress_bar.dart';
 import 'package:chewie/src/material/models/option_item.dart';
 import 'package:chewie/src/material/widgets/options_dialog.dart';
@@ -30,7 +31,8 @@ class MaterialDesktopControls extends StatefulWidget {
   }
 }
 
-class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with SingleTickerProviderStateMixin {
+class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
+    with SingleTickerProviderStateMixin {
   late PlayerNotifier notifier;
   late VideoPlayerValue _latestValue;
   double? _latestVolume;
@@ -47,6 +49,12 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
 
   late VideoPlayerController controller;
   ChewieController? _chewieController;
+
+  // Yummy Custom
+  Timer timerStep = Timer(const Duration(milliseconds: 500), () {});
+  bool isSelect = false;
+  bool isPlay = false;
+  int positionVideo = 0;
 
   // We know that _chewieController is set in didChangeDependencies
   ChewieController get chewieController => _chewieController!;
@@ -88,16 +96,26 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
                   child: CircularProgressIndicator(),
                 )
               else
-                _buildHitArea(),
+                _buildAreaStep(),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  if (_subtitleOn)
-                    Transform.translate(
-                      offset: Offset(0.0, notifier.hideStuff ? barHeight * 0.8 : 0.0),
-                      child: _buildSubtitles(context, chewieController.subtitle!),
-                    ),
-                  _buildBottomBar(context),
+                  // if (_subtitleOn)
+                  //   Transform.translate(
+                  //     offset: Offset(
+                  //         0.0, notifier.hideStuff ? barHeight * 0.8 : 0.0),
+                  //     child:
+                  //         _buildSubtitles(context, chewieController.subtitle!),
+                  //   ),
+                  // _buildAreaStep(),
+                  if (isPlay)
+                    const SizedBox.shrink()
+                  else
+                    _buildLabelRecipeCarousel(),
+                  if (notifier.hideStuff)
+                    const SizedBox.shrink()
+                  else
+                    _buildBottomBar(context),
                 ],
               ),
             ],
@@ -145,24 +163,30 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
           _onSpeedButtonTap();
         },
         iconData: Icons.speed,
-        title: chewieController.optionsTranslation?.playbackSpeedButtonText ?? 'Playback speed',
+        title: chewieController.optionsTranslation?.playbackSpeedButtonText ??
+            'Playback speed',
       )
     ];
 
-    if (chewieController.subtitle != null && chewieController.subtitle!.isNotEmpty) {
+    if (chewieController.subtitle != null &&
+        chewieController.subtitle!.isNotEmpty) {
       options.add(
         OptionItem(
           onTap: () {
             _onSubtitleTap();
             Navigator.pop(context);
           },
-          iconData: _subtitleOn ? Icons.closed_caption : Icons.closed_caption_off_outlined,
-          title: chewieController.optionsTranslation?.subtitlesButtonText ?? 'Subtitles',
+          iconData: _subtitleOn
+              ? Icons.closed_caption
+              : Icons.closed_caption_off_outlined,
+          title: chewieController.optionsTranslation?.subtitlesButtonText ??
+              'Subtitles',
         ),
       );
     }
 
-    if (chewieController.additionalOptions != null && chewieController.additionalOptions!(context).isNotEmpty) {
+    if (chewieController.additionalOptions != null &&
+        chewieController.additionalOptions!(context).isNotEmpty) {
       options.addAll(chewieController.additionalOptions!(context));
     }
 
@@ -183,7 +207,8 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
               useRootNavigator: chewieController.useRootNavigator,
               builder: (context) => OptionsDialog(
                 options: options,
-                cancelButtonText: chewieController.optionsTranslation?.cancelButtonText,
+                cancelButtonText:
+                    chewieController.optionsTranslation?.cancelButtonText,
               ),
             );
           }
@@ -245,7 +270,8 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
       duration: const Duration(milliseconds: 300),
       child: Container(
         height: barHeight + (chewieController.isFullScreen ? 20.0 : 0),
-        padding: EdgeInsets.only(bottom: chewieController.isFullScreen ? 10.0 : 15),
+        padding:
+            EdgeInsets.only(bottom: chewieController.isFullScreen ? 10.0 : 15),
         child: SafeArea(
           bottom: chewieController.isFullScreen,
           child: Column(
@@ -257,10 +283,12 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
                 child: Row(
                   children: <Widget>[
                     _buildPlayPause(controller),
-                    _buildMuteButton(controller),
-                    if (chewieController.isLive) const Expanded(child: Text('LIVE')) else _buildPosition(iconColor),
+                    if (chewieController.isLive)
+                      const Expanded(child: Text('LIVE'))
+                    else
+                      _buildPosition(iconColor),
                     const Spacer(),
-                    if (chewieController.showOptions) _buildOptionsButton(icon: Icons.settings),
+                    _buildMuteButton(controller),
                     if (chewieController.allowFullScreen) _buildExpandButton(),
                   ],
                 ),
@@ -302,7 +330,9 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
           ),
           child: Center(
             child: Icon(
-              chewieController.isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+              chewieController.isFullScreen
+                  ? Icons.fullscreen_exit
+                  : Icons.fullscreen,
               color: Colors.white,
             ),
           ),
@@ -341,6 +371,8 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
         isPlaying: controller.value.isPlaying,
         show: showPlayButton,
         onPressed: _playPause,
+        isFullscreen: chewieController.isFullScreen,
+        onExpandCollapse: _onExpandCollapse,
       ),
     );
   }
@@ -472,7 +504,8 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
       notifier.hideStuff = true;
 
       chewieController.toggleFullScreen();
-      _showAfterExpandCollapseTimer = Timer(const Duration(milliseconds: 300), () {
+      _showAfterExpandCollapseTimer =
+          Timer(const Duration(milliseconds: 300), () {
         setState(() {
           _cancelAndRestartTimer();
         });
@@ -519,6 +552,25 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
       _latestValue = controller.value;
       _subtitlesPosition = controller.value.position;
     });
+    videoPlayerListener();
+  }
+
+  void videoPlayerListener() {
+    final bool isPlaying = _latestValue.isPlaying;
+    final position = _latestValue.position;
+    final duration = _latestValue.duration;
+    positionVideo = position.inSeconds;
+    if (isPlaying) {
+      isPlay = true;
+    } else {
+      isPlay = false;
+    }
+
+    if (!isPlay && position == duration) {
+      controller.seekTo(Duration.zero).then((v) {
+        controller.pause();
+      });
+    }
   }
 
   Widget _buildProgressBar() {
@@ -548,5 +600,186 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls> with 
             ),
       ),
     );
+  }
+
+  void onRequestStep(int index) {
+    if (isPlay) {
+      setState(() {
+        isSelect = true;
+        timerStep.cancel();
+        if (chewieController.cookingStep[index] != null) {
+          controller
+              .seekTo(
+            Duration(
+              milliseconds:
+                  ((chewieController.cookingStep[index].startAt as int) *
+                          1000) +
+                      300,
+            ),
+          )
+              .then((a) {
+            timerStep = Timer(const Duration(milliseconds: 400), () {
+              _chewieController?.activeCook = index;
+              isSelect = false;
+            });
+            if (chewieController.cookingStep[index] != null) {
+              _chewieController?.stepCook =
+                  chewieController.cookingStep[index].text as String;
+            }
+          });
+        }
+      });
+    } else {
+      if (chewieController.cookingStep[index] != null) {
+        controller.seekTo(
+          Duration(
+            milliseconds:
+                (chewieController.cookingStep[index].startAt as int) * 1000,
+          ),
+        );
+        _chewieController?.activeCook = index;
+        _chewieController?.stepCook =
+            chewieController.cookingStep[index].text as String;
+      }
+    }
+
+    chewieController.onCookingStepChange
+        .call(chewieController.cookingStep[index]);
+  }
+
+  Color _selectStep(int index) {
+    final idx = index + 1;
+    if (chewieController.cookingStep[index] != null &&
+        idx >= chewieController.cookingStep.length &&
+        !isSelect &&
+        positionVideo >=
+            (int.tryParse(
+                    chewieController.cookingStep[index].startAt.toString()) ??
+                0)) {
+      _chewieController?.activeCook = index;
+      _chewieController?.stepCook =
+          chewieController.cookingStep[index].text as String;
+      return Colors.white;
+    } else if (!isSelect && idx < chewieController.cookingStep.length) {
+      if (chewieController.cookingStep[index] != null) {
+        if (positionVideo >=
+                (int.tryParse(
+                      chewieController.cookingStep[index].startAt.toString(),
+                    ) ??
+                    0) &&
+            positionVideo <
+                (int.tryParse(
+                        chewieController.cookingStep[idx].startAt.toString()) ??
+                    0)) {
+          _chewieController?.activeCook = index;
+          _chewieController?.stepCook =
+              chewieController.cookingStep[index].text as String;
+
+          return Colors.white;
+        }
+      }
+    }
+
+    return Colors.white.withOpacity(0.2);
+  }
+
+  Widget _buildAreaStep() {
+    return Container(
+      color: Colors.grey.withOpacity(0.1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          if (chewieController.isFullScreen && chewieController.isOfficial)
+            Container(
+              width: (MediaQuery.of(context).size.width -
+                      MediaQuery.of(context).size.height) /
+                  2,
+              padding: const EdgeInsets.only(top: 20),
+              child: ListView.builder(
+                physics: const ClampingScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: chewieController.cookingStep.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        onRequestStep(index);
+                      });
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.only(
+                        bottom: 20,
+                        left: 20,
+                        right: 20,
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _selectStep(index),
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: controller.value.size.width / 82.2 * 2,
+                        ),
+                        alignment: Alignment.center,
+                        child: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Text(
+                            chewieController.cookingStep[index] != null
+                                ? chewieController.cookingStep[index].title
+                                    as String
+                                : '',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            Container(),
+          _buildHitArea(),
+          if (chewieController.isFullScreen && chewieController.isOfficial)
+            Container(
+              width: (MediaQuery.of(context).size.width -
+                      MediaQuery.of(context).size.height) /
+                  2,
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.only(
+                  top: 10, left: 10, bottom: 10, right: 10),
+              alignment: Alignment.center,
+              child: ListView(
+                physics: const ClampingScrollPhysics(),
+                shrinkWrap: true,
+                children: <Widget>[
+                  Text(
+                    chewieController.stepCook == ""
+                        ? ""
+                        : chewieController.stepCook,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabelRecipeCarousel() {
+    return chewieController.modelLabelRecipe.isNotEmpty
+        ? LabelSection(
+            section: chewieController.modelLabelRecipe,
+            baseCDNUrl: chewieController.baseCDNUrl,
+          )
+        : const SizedBox.shrink();
   }
 }
