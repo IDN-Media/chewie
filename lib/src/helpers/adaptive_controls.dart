@@ -1,4 +1,3 @@
-import 'package:chewie/chewie.dart';
 import 'package:chewie/src/material/material_desktop_controls.dart';
 import 'package:flutter/material.dart';
 
