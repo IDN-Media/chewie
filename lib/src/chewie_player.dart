@@ -257,6 +257,7 @@ class ChewieController extends ChangeNotifier {
   final String idRecipe;
   final Function(bool) onToggleFullscreen;
   final String baseCDNUrl;
+  final Function(dynamic) onCookingStepChange;
 
   ChewieController({
     required this.videoPlayerController,
@@ -302,6 +303,7 @@ class ChewieController extends ChangeNotifier {
     this.idRecipe = "",
     this.onToggleFullscreen = _onToggleFullscreen,
     this.baseCDNUrl = '',
+    this.onCookingStepChange = _onCookingStepChange,
   }) : assert(
           playbackSpeeds.every((speed) => speed > 0),
           'The playbackSpeeds values must all be greater than 0',
@@ -311,6 +313,7 @@ class ChewieController extends ChangeNotifier {
 
   // Default function
   static void _onToggleFullscreen(bool _) {}
+  static void _onCookingStepChange(dynamic _) {}
 
   ChewieController copyWith({
     VideoPlayerController? videoPlayerController,
@@ -362,6 +365,7 @@ class ChewieController extends ChangeNotifier {
     String? idRecipe,
     Function(bool)? onToggleFullscreen,
     String? baseCDNUrl,
+    Function(dynamic)? onCookingStepChange,
   }) {
     return ChewieController(
       videoPlayerController:
@@ -417,6 +421,7 @@ class ChewieController extends ChangeNotifier {
       idRecipe: idRecipe ?? this.idRecipe,
       onToggleFullscreen: onToggleFullscreen ?? this.onToggleFullscreen,
       baseCDNUrl: this.baseCDNUrl,
+      onCookingStepChange: this.onCookingStepChange,
     );
   }
 

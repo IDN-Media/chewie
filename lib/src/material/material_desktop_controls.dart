@@ -643,15 +643,8 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
       }
     }
 
-    // Analytics().event(
-    //   type: AnalyticsEventType.step_memasak_video_view,
-    //   values: EventFirebase(
-    //       action: AnalyticsActionType.click,
-    //       slug: chewieController!.slugRecipe,
-    //       slugId: chewieController!.idRecipe,
-    //       title: chewieController!.slugRecipe,
-    //       value: chewieController!.cookingStep![index].title),
-    // );
+    chewieController.onCookingStepChange
+        .call(chewieController.cookingStep[index]);
   }
 
   Color _selectStep(int index) {
