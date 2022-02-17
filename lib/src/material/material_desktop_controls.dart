@@ -684,94 +684,92 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   }
 
   Widget _buildAreaStep() {
-    return Expanded(
-      child: Container(
-        color: Colors.grey.withOpacity(0.1),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            if (chewieController.isFullScreen && chewieController.isOfficial)
-              Container(
-                width: (MediaQuery.of(context).size.width -
-                        MediaQuery.of(context).size.height) /
-                    2,
-                padding: const EdgeInsets.only(top: 20),
-                child: ListView.builder(
-                  physics: const ClampingScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: chewieController.cookingStep.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          onRequestStep(index);
-                        });
-                      },
+    return Container(
+      color: Colors.grey.withOpacity(0.1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          if (chewieController.isFullScreen && chewieController.isOfficial)
+            Container(
+              width: (MediaQuery.of(context).size.width -
+                      MediaQuery.of(context).size.height) /
+                  2,
+              padding: const EdgeInsets.only(top: 20),
+              child: ListView.builder(
+                physics: const ClampingScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: chewieController.cookingStep.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        onRequestStep(index);
+                      });
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.only(
+                        bottom: 20,
+                        left: 20,
+                        right: 20,
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _selectStep(index),
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
                       child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: controller.value.size.width / 82.2 * 2,
+                        ),
                         alignment: Alignment.center,
-                        margin: const EdgeInsets.only(
-                          bottom: 20,
-                          left: 20,
-                          right: 20,
-                        ),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: _selectStep(index),
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: controller.value.size.width / 82.2 * 2,
-                          ),
-                          alignment: Alignment.center,
-                          child: FittedBox(
-                            fit: BoxFit.fitHeight,
-                            child: Text(
-                              chewieController.cookingStep[index] != null
-                                  ? chewieController.cookingStep[index].title
-                                      as String
-                                  : '',
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        child: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Text(
+                            chewieController.cookingStep[index] != null
+                                ? chewieController.cookingStep[index].title
+                                    as String
+                                : '',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-              )
-            else
-              Container(),
-            _buildHitArea(),
-            if (chewieController.isFullScreen && chewieController.isOfficial)
-              Container(
-                width: (MediaQuery.of(context).size.width -
-                        MediaQuery.of(context).size.height) /
-                    2,
-                height: MediaQuery.of(context).size.height,
-                padding: const EdgeInsets.only(
-                    top: 10, left: 10, bottom: 10, right: 10),
-                alignment: Alignment.center,
-                child: ListView(
-                  physics: const ClampingScrollPhysics(),
-                  shrinkWrap: true,
-                  children: <Widget>[
-                    Text(
-                      chewieController.stepCook == ""
-                          ? ""
-                          : chewieController.stepCook,
-                      style: const TextStyle(color: Colors.white),
                     ),
-                  ],
-                ),
-              )
-            else
-              Container(),
-          ],
-        ),
+                  );
+                },
+              ),
+            )
+          else
+            Container(),
+          _buildHitArea(),
+          if (chewieController.isFullScreen && chewieController.isOfficial)
+            Container(
+              width: (MediaQuery.of(context).size.width -
+                      MediaQuery.of(context).size.height) /
+                  2,
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.only(
+                  top: 10, left: 10, bottom: 10, right: 10),
+              alignment: Alignment.center,
+              child: ListView(
+                physics: const ClampingScrollPhysics(),
+                shrinkWrap: true,
+                children: <Widget>[
+                  Text(
+                    chewieController.stepCook == ""
+                        ? ""
+                        : chewieController.stepCook,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(),
+        ],
       ),
     );
   }
