@@ -687,8 +687,9 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
     return Container(
       color: Colors.grey.withOpacity(0.1),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
+          const SizedBox(width: 16),
           if (chewieController.isFullScreen && chewieController.isOfficial)
             Container(
               width: (MediaQuery.of(context).size.width -
@@ -769,6 +770,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
             )
           else
             Container(),
+          const SizedBox(width: 16),
         ],
       ),
     );
